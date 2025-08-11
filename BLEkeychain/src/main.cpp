@@ -39,7 +39,38 @@
 // How this works: The first two bytes are Bluetooth SIG company identifiers ie:
 // https://www.bluetooth.com/specifications/assigned-numbers/
 // After those two bytes, everything else how we want to set it. This is needed so 
-// BLE keychains can determine one another and ignore other BLE devices
+// BLE keychains can determine one another and ignore other BLE devices. 
+//                         How this will look: 
+// 0–1	0xFF, 0xFF (Fake company ID for now), 2–5 Magic string, 6–9 Unique ID from BLE MAC
+
+//for the first trial, fake id, my cat's name, 0
+static const uint16_t kCompanyId = 0xFFFF; //test
+static const uint8_t  kMagic[4]  = {'J','I','J','I'}; // JIJI
+uint32_t Id = 0; 
+
+//setup for the LED pixel
+Adafruit_NeoPixel pixel(
+    LED_COUNT,             // number of LEDs (e.g., 1 for a single WS2812)
+    LED_PIN,              // which GPIO pin sends data to the LED
+    NEO_GRB + NEO_KHZ800 // LED color order + timing speed
+);
+
+// LED one-shot state
+volatile bool shouldFlash = false;
+unsigned long flashStart = 0;
+
+// Proximity state tracking
+volatile int lastStrongRSSI = -127; // stores the last RSSI value inside proximity
+volatile unsigned long lastStrongSeenMs = 0; // timestamp of last RSSI value
+
+//define two states for the proximity state machine
+//OUTSIDE: Not currently considered in proximity to another keychain.
+//INSIDE: Currently in proximity to another keychain.
+enum ProxState { OUTSIDE, INSIDE };
+ProxState proxState = OUTSIDE;
+
+
+// ---------------------------------------------------------------------
 
 // put function declarations here:
 int myFunction(int, int);
